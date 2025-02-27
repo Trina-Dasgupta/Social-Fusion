@@ -34,7 +34,7 @@ const Header = () => {
   }, [showSettings]);
 
   return (
-    <div className="flex items-center justify-between w-full p-4 bg-white dark:bg-gray-900 shadow-md relative">
+    <div className="flex items-center justify-between w-full p-4 relative">
       {/* Left: Logo */}
       <div className="flex items-center">
         <Logo />

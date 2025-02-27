@@ -176,7 +176,7 @@ const ChatInput = ({ sendMessage }: { sendMessage: (text: string, type?: string,
           placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="w-full p-2 px-4 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:text-white"
+          className="w-full p-2 px-4 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
         />
 
         {/* Send Button */}
