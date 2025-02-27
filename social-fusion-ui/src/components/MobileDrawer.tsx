@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, X } from "lucide-react";
+import Link from "next/link";
 import Logo from "./Logo";
 
 const MobileDrawer = ({
@@ -30,7 +31,7 @@ const MobileDrawer = ({
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-       <Logo/>
+     <Logo/>
         <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-red-500">
           <X size={24} />
         </button>

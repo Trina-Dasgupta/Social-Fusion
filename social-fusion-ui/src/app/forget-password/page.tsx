@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -20,12 +21,7 @@ const ForgetPassword = () => {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
         {/* Logo & Home Link */}
         <div className="flex justify-center mb-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-3xl font-bold text-blue-500">🌐</span>
-            <span className="text-2xl font-bold text-gray-800 dark:text-white">
-              SocialFusion
-            </span>
-          </Link>
+          <Logo/>
         </div>
 
         {/* Header */}

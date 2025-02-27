@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Logo from "./Logo";
 
 const ThemeToggle = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -24,12 +25,7 @@ const ThemeToggle = () => {
   return (
     <div className="flex items-center justify-between w-full p-4 ">
       {/* Logo & Home Link */}
-      <Link href="/" className="flex items-center gap-2">
-        <span className="text-3xl font-bold text-blue-500">🌐</span>
-        <span className="text-2xl font-bold text-gray-800 dark:text-white">
-          SocialFusion
-        </span>
-      </Link>
+      <Logo/>
 
       {/* Theme Toggle Button */}
       <button
