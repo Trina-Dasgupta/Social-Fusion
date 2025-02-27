@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import ChatWindow from "@/components/ChatWindow";
-import ThemeToggle from "@/components/ThemeToggle";
 import FriendList from "@/components/FriendList";
 import { friends } from "@/utils/friends";
 
@@ -45,11 +44,7 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Theme Toggle */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="flex justify-end">
-            <ThemeToggle />
-          </div>
-        </div>
+       
 
         {/* Chat Window */}
         <div className="flex flex-col h-full min-h-0">

@@ -4,20 +4,15 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const Register = () => {
+const ForgetPassword = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-    console.log("Registered with:", { email, password });
-    router.push("/login");
+    console.log("Password reset email sent to:", email);
+    setMessage("A password reset link has been sent to your email.");
   };
 
   return (
@@ -35,10 +30,10 @@ const Register = () => {
 
         {/* Header */}
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">
-          Create an Account
+          Forgot Password?
         </h2>
         <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
-          Sign up to start using Social Fusion
+          Enter your email to receive a password reset link.
         </p>
 
         {/* Form */}
@@ -57,46 +52,25 @@ const Register = () => {
             />
           </div>
 
-          {/* Password Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
-            <input
-              type="password"
-              className="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Confirm Password Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              className="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Register Button */}
+          {/* Reset Button */}
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200"
           >
-            Sign Up
+            Send Reset Link
           </button>
         </form>
 
-        {/* Login Link */}
+        {/* Success Message */}
+        {message && (
+          <p className="text-center text-sm text-green-500 mt-3">
+            {message}
+          </p>
+        )}
+
+        {/* Back to Login */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-          Already have an account?{" "}
+          Remember your password?{" "}
           <Link href="/login" className="text-blue-500 hover:underline">
             Log in
           </Link>
@@ -106,4 +80,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default ForgetPassword;

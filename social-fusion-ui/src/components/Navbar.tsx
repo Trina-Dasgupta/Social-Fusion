@@ -26,7 +26,6 @@ const Navbar = ({
           >
             ☰
           </button>
-          <h1 className="text-white text-lg font-bold">Social Fusion</h1>
         </div>
       </nav>
 
