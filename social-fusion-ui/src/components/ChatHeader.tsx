@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, X, Settings } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, MoreVertical, X } from "lucide-react";
 import { friends } from "@/utils/friends";
 import Profile from "./Profile";
 
@@ -22,9 +22,12 @@ const ChatHeader = ({
   const [showSearch, setShowSearch] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [showProfile, setShowProfile] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    // Find the friend based on friendId
     const selectedFriend = friends.find((f) => f.id === friendId);
     if (selectedFriend) {
       setFriend({
@@ -39,6 +42,24 @@ const ChatHeader = ({
     }
   }, [friendId]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current?.contains(event.target as Node) ||
+        menuButtonRef.current?.contains(event.target as Node)
+      ) {
+        return;
+      }
+      setShowMenu(false);
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMenu]);
+
   if (!friend) {
     return (
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -48,7 +69,7 @@ const ChatHeader = ({
   }
 
   return (
-    <div className="sticky top-0 w-full h-16 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shadow-md">
+    <div className="sticky top-0 w-full h-16 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shadow-md relative">
       {showSearch ? (
         <div className="flex-1 flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
           <Search size={18} className="text-gray-600 dark:text-gray-300" />
@@ -94,23 +115,62 @@ const ChatHeader = ({
             </div>
           </div>
 
-          {/* Search & Settings Icons */}
-          <div className="flex space-x-4">
+          {/* Search & More Options (⋮) */}
+          <div className="flex space-x-4 relative">
             <button
               className="text-gray-600 dark:text-gray-300 hover:text-blue-500"
               onClick={() => setShowSearch(true)}
             >
               <Search size={20} />
             </button>
-            <button className="text-gray-600 dark:text-gray-300 hover:text-blue-500">
-              <Settings size={20} />
+
+            <button
+              ref={menuButtonRef}
+              className="text-gray-600 dark:text-gray-300 hover:text-blue-500"
+              onClick={() => setShowMenu((prev) => !prev)}
+            >
+              <MoreVertical size={20} />
             </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div
+                ref={menuRef}
+                className="absolute top-10 right-0 w-48 bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden"
+              >
+                <button
+                  onClick={() => {
+                    setShowProfile(true);
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View Contact
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowSearch(true);
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Search
+                </button>
+
+                <button className="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Media, Links & Docs
+                </button>
+
+                <button className="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Mute Notifications
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Profile Modal */}
-          {showProfile && (
-            <Profile friend={friend} onBack={() => setShowProfile(false)} />
-          )}
+          {showProfile && <Profile friend={friend} onBack={() => setShowProfile(false)} />}
         </>
       )}
     </div>
