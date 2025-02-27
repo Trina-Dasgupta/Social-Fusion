@@ -21,7 +21,7 @@ const Login = () => {
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
         {/* Logo & Home Link */}
         <div className="flex justify-center mb-4">
-        <Logo/>
+          <Logo />
         </div>
 
         {/* Header */}
@@ -80,11 +80,12 @@ const Login = () => {
 
         {/* Register Link */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-          Don't have an account?{" "}
+          Don&#39;t have an account?{" "}
           <Link href="/register" className="text-blue-500 hover:underline">
             Sign up
           </Link>
         </p>
+
       </div>
     </div>
   );

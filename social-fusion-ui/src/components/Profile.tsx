@@ -41,7 +41,7 @@ const Profile = ({
   return (
     <div
       ref={profileRef}
-      className="fixed inset-y-0 right-0 w-full md:w-96 bg-white dark:bg-gray-900 shadow-lg z-50"
+      className="fixed inset-y-0 right-0 w-full md:w-96 bg-white dark:bg-gray-900 shadow-lg -z-50"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -79,7 +79,7 @@ const Profile = ({
 
         {/* Status */}
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          "Hey there! I am using WhatsApp."
+          &quot;Hey there! I am using WhatsApp.&quot;
         </p>
 
         {/* Audio and Video Call Buttons */}

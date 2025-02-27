@@ -1,8 +1,10 @@
 "use client";
 
-import { useState,useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import ChatHeader from "./ChatHeader";
 import ChatInput from "./ChatInput";
+import Image from "next/image";
+import Link from "next/link";
 
 
 const ChatWindow = ({
@@ -20,11 +22,11 @@ const ChatWindow = ({
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, 100); 
-  
-    return () => clearTimeout(timeoutId); 
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [messages]);
-  
+
 
   // Filter messages based on search query
   const filteredMessages = messages.filter((msg) =>
@@ -42,11 +44,20 @@ const ChatWindow = ({
           filteredMessages.map((msg, index) => (
             <div key={index} className={`flex ${msg.sender === "You" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`p-3 rounded-lg shadow-sm break-words max-w-[75%] ${
-                  msg.sender === "You" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-white"
-                }`}
+                className={`p-3 rounded-lg shadow-sm break-words max-w-[75%] ${msg.sender === "You" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-700 dark:text-white"
+                  }`}
               >
-                {msg.type === "image" && <img src={msg.fileUrl} alt="Uploaded" className="rounded-lg w-48 h-auto" />}
+                {msg.type === "image" && msg.fileUrl && (
+                  <Image
+                    src={msg.fileUrl}
+                    alt="Uploaded"
+                    width={192}
+                    height={192}
+                    className="rounded-lg w-48 h-auto"
+                  />
+                )}
+
+
                 {msg.type === "video" && (
                   <video controls className="rounded-lg w-48 h-auto">
                     <source src={msg.fileUrl} type="video/mp4" />
@@ -60,9 +71,9 @@ const ChatWindow = ({
                   </div>
                 )}
                 {msg.type === "document" && (
-                  <a href={msg.fileUrl} target="_blank" className="text-blue-500 underline">
+                  <Link href={msg.fileUrl ?? ""} target="_blank" className="text-blue-500 underline">
                     📎 {msg.text}
-                  </a>
+                  </Link>
                 )}
                 {msg.type === "text" && <p>{msg.text}</p>}
 

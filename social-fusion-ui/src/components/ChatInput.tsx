@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Paperclip, Mic, Send, Smile, Image, FileText, Video, X } from "lucide-react";
+import { Paperclip, Mic, Send, Smile, Image as CustomImage, FileText, Video, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
@@ -92,7 +92,7 @@ const ChatInput = ({ sendMessage }: { sendMessage: (text: string, type?: string,
           <div className="flex flex-col space-y-2">
             {/* Image Upload */}
             <label className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg cursor-pointer">
-              <Image size={18} className="text-blue-500" />
+              <CustomImage size={18} className="text-blue-500" />
               <span className="text-sm text-gray-800 dark:text-white">Image</span>
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, "image")} hidden />
             </label>

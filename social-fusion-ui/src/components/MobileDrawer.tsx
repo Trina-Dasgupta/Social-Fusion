@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Search, X } from "lucide-react";
-import Link from "next/link";
 import Logo from "./Logo";
 
 const MobileDrawer = ({
