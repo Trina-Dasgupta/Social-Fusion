@@ -1,0 +1,38 @@
+{
+    "windows": {
+      "username": "root",
+      "password": "",
+      "database": "socialfusion",
+      "host": "0.0.0.0",
+      "dialect": "mysql"
+    },
+    "local": {
+      "username": "root",
+      "password": "admin#123",
+      "database": "socialfusion",
+      "host": "0.0.0.0",
+      "dialect": "mysql"
+    },
+    "development": {
+      "username": "root",
+      "password": "admin#123",
+      "database": "socialfusion",
+      "host": "0.0.0.0",
+      "dialect": "mysql"
+    },
+    "production": {
+      "username": "root",
+      "password": "0[uI15h3qAW&",
+      "database": "socialfusion",
+      "host": "0.0.0.0",
+      "dialect": "mysql"
+    },
+    "staging": {
+      "username": "root",
+      "password": "6<hT1)1Ceu9x",
+      "database": "socialfusion",
+      "host": "0.0.0.0",
+      "dialect": "mysql"
+    }
+  }
+  

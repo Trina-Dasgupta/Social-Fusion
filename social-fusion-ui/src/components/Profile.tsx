@@ -1,15 +1,24 @@
 "use client";
 
-import { ArrowLeft, X, Lock, Phone, Video, Search, Flag, Ban } from "lucide-react"; // Import icons
-import { useEffect, useRef } from "react";
+import { ArrowLeft, X, Lock, Phone, Video, Search, Flag, Ban, ArrowRight } from "lucide-react"; // Import icons
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+
 
 const Profile = ({
   friend,
   onBack,
+  mediaItems = [],
+  onMediaClick
 }: {
   friend: { name: string; phone: string; profilePic: string } | null;
   onBack: () => void;
+  mediaItems?: { fileUrl: string; type: string }[];
+  onMediaClick: () => void;
 }) => {
+  const [isMounted, setIsMounted] = useState(false);
+
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Handle click outside the profile
@@ -31,18 +40,24 @@ const Profile = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onBack]);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
+  if (!isMounted) return null; 
+ 
   if (!friend) {
     return (
       <div className="p-4 text-gray-500 dark:text-gray-400">User not found</div>
     );
   }
-
+  const mediaCount = mediaItems.length;
+  const displayedMedia = mediaItems.slice(0, 6); // Show only 6 items
   return (
     <div
       ref={profileRef}
-      className="fixed inset-y-0 right-0 w-full md:w-96 bg-white dark:bg-gray-900 shadow-lg -z-50"
-    >
+      className="fixed inset-y-0 right-0 w-full md:w-96 bg-white dark:bg-gray-900 shadow-lg h-screen z-[1000]">
+
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <button
@@ -107,21 +122,45 @@ const Profile = ({
           </div>
         </div>
 
-        {/* Media, Links, Docs */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Media, Links & Docs
-          </h4>
-          <div className="grid grid-cols-3 gap-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
-              <div
-                key={item}
-                className="w-full h-24 bg-gray-200 dark:bg-gray-700 rounded-lg"
-              ></div>
-            ))}
-          </div>
+         {/* Media, Links & Docs */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center cursor-pointer" onClick={onMediaClick}>
+        <div>
+          <h4 className="text-lg font-semibold text-gray-800 dark:text-white">Media, Links & Docs</h4>
+          <p className="text-gray-500 dark:text-gray-400">{mediaCount} items</p>
         </div>
 
+        <ArrowRight size={20} className="text-gray-600 dark:text-gray-300" />
+
+        
+      </div>
+
+      {/* Media Grid (First 6 Media Items) */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        {mediaCount > 0 ? (
+          <div className="grid grid-cols-3 gap-2">
+            {displayedMedia.map((item, index) => (
+              <div key={index} className="w-full h-24 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
+                {item.type === "image" && <Image src={item.fileUrl} alt="Image" width={96} height={96} className="object-cover w-full h-full" />}
+                {item.type === "video" && (
+                  <video className="w-full h-full object-cover" controls>
+                    <source src={item.fileUrl} type="video/mp4" />
+                  </video>
+                )}
+                {item.type === "document" && (
+                  <Link href={item.fileUrl} target="_blank" className="text-blue-500 underline">
+                    📎 Document
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
+            <p className="text-lg font-medium">No Media Found</p>
+            <p className="text-sm">Photos, videos, and documents shared in this chat will appear here.</p>
+          </div>
+        )}
+      </div>
         {/* Additional Details */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
@@ -161,6 +200,7 @@ const Profile = ({
           </div>
         </div>
       </div>
+      {/* {mediaOpen && <AllMedia mediaItems={mediaItems} />} */}
     </div>
   );
 };
