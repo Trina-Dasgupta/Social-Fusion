@@ -27,7 +27,6 @@ export const register = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    console.log("📩 Register API Called");
 
     const { fullName, username, phoneNumber, email, password } = req.body;
 
@@ -41,8 +40,8 @@ export const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: "Email, Username, or Phone Number already taken." });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const salt = await bcrypt.genSalt(10);
+    // const hashedPassword = await bcrypt.hash(password, salt);
     let profilePicUrl = req.file ? await uploadToCloudinary(req.file.path) : null;
 
     const user = await User.create(
@@ -51,7 +50,7 @@ export const register = async (req, res) => {
         username,
         phoneNumber,
         email,
-        password: hashedPassword,
+        password,
         profilePic: profilePicUrl,
         isVerified: false,
       },
@@ -65,14 +64,13 @@ export const register = async (req, res) => {
       "🔐 Email Verification",
       user.fullName,
       `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
-      "Verify Email",
-      `${process.env.SITE_URL}/verify-email?otp=${otp}&email=${user.email}`
+      "Verify Email"
     );
     await sendEmail(user.email, "Verify Your Email", otpEmail);
 
     await transaction.commit();
 
-    res.status(201).json({ message: "User registered. OTP sent for verification.", token: generateToken(user.id) });
+    res.status(201).json({ message: "User registered. OTP sent for verification.", data: user });
 
   } catch (error) {
     console.error("❌ Registration Error:", error);
@@ -103,13 +101,75 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
-  const { phone, password } = req.body;
-  const user = await User.findOne({ where: { phone } });
 
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.json({ user, token: generateToken(user.id) });
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
+export const login = async (req, res) => {
+  // Input validation
+  await Promise.all([
+    body("identifier")
+      .notEmpty()
+      .withMessage("Phone, email, or username is required")
+      .run(req),
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .run(req),
+  ]);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { identifier, password } = req.body;
+
+    // Find user by identifier
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { phoneNumber: identifier },
+          { email: identifier },
+          { username: identifier },
+        ],
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Check if account is verified
+    if (!user.isVerified) {
+      return res.status(403).json({ error: "Please verify your account before logging in" });
+    }
+
+    // Compare passwords
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+  
+    // Generate JWT token
+    const token = generateToken(user.id);
+
+    // Return success response
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        username: user.username,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        profilePic: user.profilePic,
+      },
+    });
+
+  } catch (error) {
+    console.error("❌ Login Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
