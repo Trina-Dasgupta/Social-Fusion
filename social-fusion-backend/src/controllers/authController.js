@@ -31,10 +31,9 @@ export const register = async (req, res) => {
 
     const { fullName, username, phoneNumber, email, password } = req.body;
 
-    // ✅ Check if user already exists (Fix applied)
     const existingUser = await User.findOne({
       where: { 
-        [Op.or]: [{ email }, { username }, { phoneNumber }] // ✅ Fixed Sequelize `Op.or`
+        [Op.or]: [{ email }, { username }, { phoneNumber }] 
       },
       transaction,
     });
@@ -67,7 +66,7 @@ export const register = async (req, res) => {
       user.fullName,
       `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
       "Verify Email",
-      `${process.env.CLIENT_URL}/verify-email?otp=${otp}&email=${user.email}`
+      `${process.env.SITE_URL}/verify-email?otp=${otp}&email=${user.email}`
     );
     await sendEmail(user.email, "Verify Your Email", otpEmail);
 
