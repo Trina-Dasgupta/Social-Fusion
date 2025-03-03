@@ -1,10 +1,8 @@
 "use client";
+import { SearchBarProps } from "@/types";
 import { Search as SearchIcon } from "lucide-react";
 
-interface SearchBarProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
+
 
 const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuery }) => {
   return (

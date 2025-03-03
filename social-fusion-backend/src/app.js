@@ -6,7 +6,7 @@ import compression from "compression";
 import rateLimit from "express-rate-limit";
 import { config } from "dotenv";
 import authRoutes from "./routes/authRoutes.js"; // Fixed import
-
+import "../src/jobs/cronJobs.js";
 config(); // Load environment variables
 
 const app = express();
