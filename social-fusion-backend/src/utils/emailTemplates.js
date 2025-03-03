@@ -1,6 +1,6 @@
 export const socialFusionEmailTemplate = (title, name, message, ctaText, ctaLink) => `
   <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 5px; background: #ffffff;">
-    <h2 style="color: #333; text-align: center;">🚀 SocialFusion</h2>
+    <h2 style="color: #333; text-align: center;">🌐 SocialFusion</h2>
     <h3 style="color: #555; text-align: center;">${title}</h3>
     
     <p>Hi <strong>${name}</strong>,</p>
