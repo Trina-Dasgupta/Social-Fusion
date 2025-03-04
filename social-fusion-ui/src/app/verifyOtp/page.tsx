@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 
@@ -9,6 +9,25 @@ const VerifyOTP = () => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill("")); 
   const [isValid, setIsValid] = useState<boolean | null>(null); 
   const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [timer, setTimer] = useState(30);
+  const [isResendDisabled, setIsResendDisabled] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isResendDisabled) {
+      interval = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer === 1) {
+            clearInterval(interval);
+            setIsResendDisabled(false); 
+            return 30;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isResendDisabled]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (/^\d*$/.test(value) && value.length <= 1) {
@@ -17,7 +36,7 @@ const VerifyOTP = () => {
       setOtp(newOtp);
 
       if (value && index < 5) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
+        const nextInput = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
         if (nextInput) nextInput.focus();
       }
     }
@@ -38,15 +57,21 @@ const VerifyOTP = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (isResendDisabled) return;
+
+    try {
+      alert("Resend OTP logic here - Call API to resend OTP"); // Replace with actual API call
+      setIsResendDisabled(true);
+      setTimer(30);
+    } catch (error) {
+      console.error("Resend OTP failed:", error);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-        {/* Logo & Home Link */}
-        <div className="flex justify-center mb-4">
-          <Logo />
-        </div>
-
-        {/* Header */}
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">
           OTP Verification
         </h2>
@@ -54,7 +79,6 @@ const VerifyOTP = () => {
           Enter the 6-digit code sent to your email
         </p>
 
-        {/* OTP Input Boxes */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <div className="flex justify-center space-x-3">
             {otp.map((digit, index) => (
@@ -73,14 +97,10 @@ const VerifyOTP = () => {
             ))}
           </div>
 
-          {/* Validation Feedback */}
           {isValid === false && (
-            <p className="text-center text-red-500 text-sm">
-              Invalid OTP. Please try again.
-            </p>
+            <p className="text-center text-red-500 text-sm">Invalid OTP. Please try again.</p>
           )}
 
-          {/* Verified Profile */}
           {isVerified && (
             <div className="flex flex-col items-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
@@ -91,21 +111,13 @@ const VerifyOTP = () => {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-center text-green-500 text-sm">
-                OTP Verified Successfully!
-              </p>
+              <p className="text-center text-green-500 text-sm">OTP Verified Successfully!</p>
             </div>
           )}
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200 disabled:bg-gray-400"
@@ -115,14 +127,14 @@ const VerifyOTP = () => {
           </button>
         </form>
 
-        {/* Resend OTP Link */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           Didn&#39;t receive the code?{" "}
           <button
-            onClick={() => alert("Resend OTP logic here")}
+            onClick={handleResendOtp}
             className="text-blue-500 hover:underline"
+            disabled={isResendDisabled}
           >
-            Resend OTP
+            {isResendDisabled ? `Resend OTP in ${timer}s` : "Resend OTP"}
           </button>
         </p>
       </div>
@@ -131,4 +143,5 @@ const VerifyOTP = () => {
 };
 
 export default VerifyOTP;
+
 
