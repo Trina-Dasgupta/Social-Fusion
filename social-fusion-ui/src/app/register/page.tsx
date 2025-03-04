@@ -1,58 +1,109 @@
-
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import Logo from "@/components/Logo";
-import useForm from "@/hooks/useForm";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast"; 
+
+import API_ROUTES from "@/constants/apiRoutes";
+import Link from "next/link";
+import Image from "next/image";
+import { useApi } from "@/hooks/useApi";
 
 const Register = () => {
   const router = useRouter();
+  const { data, error, loading, fetchData } = useApi<{ message: string }>();
 
-  // Validation function
-  const validate = (values: Record<string, string>) => {
-    const errors: Record<string, string> = {};
+  const [formData, setFormData] = useState({
+    fullName: "",
+    username: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-    if (!values.fullName) errors.fullName = "Full Name is required";
-    if (!values.username) errors.username = "Username is required";
-    if (!values.email) errors.email = "Email is required";
-    if (!values.phoneNumber) errors.phoneNumber = "Phone Number is required";
-    if (!values.password) errors.password = "Password is required";
-    if (values.password !== values.confirmPassword) errors.confirmPassword = "Passwords do not match";
+  const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-    return errors;
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) newErrors.fullName = "Full Name is required";
+    if (!formData.username.trim()) newErrors.username = "Username is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone Number is required";
+    if (!formData.password.trim()) newErrors.password = "Password is required";
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // Use custom hook
-  const { values, errors, previewImage, handleChange, handleFileChange, handleSubmit } = useForm(
-    {
-      fullName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      password: "",
-      confirmPassword: "",
-      profilePic: null,
-    },
-    validate
-  );
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (value.trim()) {
+        delete newErrors[name];
+      } else {
+        newErrors[name] = `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+      }
+
+      if (name === "confirmPassword" && value !== formData.password) {
+        newErrors.confirmPassword = "Passwords do not match";
+      } else if (name === "confirmPassword") {
+        delete newErrors.confirmPassword;
+      }
+
+      return newErrors;
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setProfilePic(file);
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const formDataToSend = new FormData();
+    Object.entries(formData).forEach(([key, value]) => formDataToSend.append(key, value));
+    if (profilePic) formDataToSend.append("profilePic", profilePic);
+
+    await fetchData(API_ROUTES.AUTH.REGISTER, "POST", formDataToSend, true);
+  };
+
+  // ✅ Trigger toast and navigation only when new data arrives
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (data) {
+      toast.success("Registration successful! Redirecting...");
+      setTimeout(() => {
+        router.push("/verifyOtp");
+      }, 1500);
+    }
+  }, [data]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-        {/* Logo & Home Link */}
-        <div className="flex justify-center mb-4">
-          <Logo/>
-        </div>
-
-        {/* Header */}
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Create an Account</h2>
         <p className="text-center text-gray-500 dark:text-gray-400 text-sm">Sign up to start using Social Fusion</p>
 
-        {/* Form */}
-        <form onSubmit={(e) => handleSubmit(e, () => router.push("/login"))} className="mt-5 space-y-4">
-          {/* Profile Picture Upload */}
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
               {previewImage ? (
@@ -67,36 +118,28 @@ const Register = () => {
             </label>
           </div>
 
-          {/* Input Fields */}
-          {[
-            { label: "Full Name", name: "fullName", type: "text" },
-            { label: "Username", name: "username", type: "text" },
-            { label: "Email", name: "email", type: "email" },
-            { label: "Phone Number", name: "phoneNumber", type: "tel" },
-            { label: "Password", name: "password", type: "password" },
-            { label: "Confirm Password", name: "confirmPassword", type: "password" },
-          ].map(({ label, name, type }) => (
-            <div key={name}>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+          {["fullName", "username", "email", "phoneNumber", "password", "confirmPassword"].map((field, index) => (
+            <div key={index}>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+              </label>
               <input
-                type={type}
-                name={name}
-                className="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                value={values[name]}
+                type={field.includes("password") ? "password" : "text"}
+                name={field}
+                className={`w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 
+                ${errors[field] ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"}`}
+                value={formData[field as keyof typeof formData]}
                 onChange={handleChange}
-                required
               />
-              {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+              {errors[field] && <p className="text-red-500 text-xs mt-1">{errors[field]}</p>}
             </div>
           ))}
 
-          {/* Register Button */}
-          <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200">
-            Sign Up
+          <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200" disabled={loading}>
+            {loading ? "Signing Up..." : "Sign Up"}
           </button>
         </form>
 
-        {/* Login Link */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           Already have an account?{" "}
           <Link href="/login" className="text-blue-500 hover:underline">Log in</Link>
@@ -105,5 +148,7 @@ const Register = () => {
     </div>
   );
 };
+
+
 
 export default Register;

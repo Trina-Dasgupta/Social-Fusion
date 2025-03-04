@@ -7,10 +7,10 @@ import OTP from "../models/Otp.js";
 cron.schedule("*/5 * * * *", async () => {
   try {
     const deletedCount = await OTP.destroy({
-      where: {
-        expiresAt: { [Op.lt]: new Date() }, // Delete expired OTPs
-      },
+      where: { createdAt: { [Op.lt]: new Date(Date.now() - 10 * 60 * 1000) } }, // Deletes OTPs older than 10 mins
+      limit: 500, // Delete in batches to prevent DB overload
     });
+    
 
     if (deletedCount > 0) {
       console.log(`✅ Cleaned up ${deletedCount} expired OTPs.`);

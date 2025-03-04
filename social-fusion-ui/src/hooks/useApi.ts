@@ -1,45 +1,35 @@
 import { useState } from "react";
+import { api } from "@/utils/api";
+import { FetchDataFunction, } from "@/utils/types";
 
-type RequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
-interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  loading: boolean;
-  fetchData: (endpoint: string, method?: RequestMethod, payload?: Record<string, unknown>) => Promise<void>;
+export function useApi<T = unknown>(): { data: T | null; error: string | null; loading: boolean; fetchData: FetchDataFunction } {
+    const [data, setData] = useState<T | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const fetchData: FetchDataFunction = async (endpoint, method = "GET", payload, isFormData = false) => {
+        setLoading(true);
+        setError(null);
+        setData(null); // ✅ Reset data before making a new request
+
+        try {
+            const response = await api({
+                url: endpoint,
+                method,
+                data: method !== "GET" ? payload : undefined,
+                headers: isFormData ? { "Content-Type": "multipart/form-data" } : { "Content-Type": "application/json" },
+            });
+
+            setData(response.data);
+        } catch (err: any) {
+            setError(err.error || err.message || "An error occurred");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { data, error, loading, fetchData };
 }
 
-export function useApi<T = unknown>(): ApiResponse<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchData = async (endpoint: string, method: RequestMethod = "GET", payload?: Record<string, unknown>) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: method !== "GET" ? JSON.stringify(payload) : undefined,
-      });
-
-      const result: T = await response.json();
-
-      if (!response.ok) {
-        throw new Error((result as { error?: string }).error || "Something went wrong");
-      }
-
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { data, error, loading, fetchData };
-}

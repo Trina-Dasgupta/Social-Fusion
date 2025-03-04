@@ -1,5 +1,5 @@
 "use client";
-import { SearchBarProps } from "@/types";
+import { SearchBarProps } from "@/utils/types";
 import { Search as SearchIcon } from "lucide-react";
 
 

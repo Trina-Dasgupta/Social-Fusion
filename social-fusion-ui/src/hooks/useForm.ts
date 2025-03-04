@@ -1,4 +1,4 @@
-import { FormValues } from "@/types";
+import { FormValues } from "@/utils/types";
 import { useState } from "react";
 
 

@@ -9,6 +9,7 @@ import { Op } from "sequelize";
 import { generateOTP } from "../utils/generateOtp.js";
 import { socialFusionEmailTemplate } from "../utils/emailTemplates.js";
 import { sendEmail } from "../services/emailService.js";
+import { sendEmailQueue } from "../utils/emailQueue.js";
 
 export const register = async (req, res) => {
   await Promise.all([
@@ -24,57 +25,56 @@ export const register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const transaction = await sequelize.transaction();
-
   try {
-
     const { fullName, username, phoneNumber, email, password } = req.body;
 
-    const existingUser = await User.findOne({
-      where: { 
-        [Op.or]: [{ email }, { username }, { phoneNumber }] 
-      },
-      transaction,
-    });
+    // Parallelized user existence check
+    const [existingEmail, existingUsername, existingPhone] = await Promise.all([
+      User.findOne({ where: { email } }),
+      User.findOne({ where: { username } }),
+      User.findOne({ where: { phoneNumber } }),
+    ]);
 
-    if (existingUser) {
+    if (existingEmail || existingUsername || existingPhone) {
       return res.status(400).json({ error: "Email, Username, or Phone Number already taken." });
     }
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedPassword = await bcrypt.hash(password, salt);
-    let profilePicUrl = req.file ? await uploadToCloudinary(req.file.path) : null;
 
-    const user = await User.create(
-      {
-        fullName,
-        username,
-        phoneNumber,
-        email,
-        password,
-        profilePic: profilePicUrl,
-        isVerified: false,
-      },
-      { transaction }
-    );
+    // Parallelize expensive tasks
+    const uploadProfilePic = req.file ? uploadToCloudinary(req.file.path) : Promise.resolve(null);
+    const generateOTPAsync = generateOTP();
 
-    const otp = generateOTP();
-    await OTP.create({ userId: user.id, otp }, { transaction });
+    const [profilePicUrl, otp] = await Promise.all([uploadProfilePic, generateOTPAsync]);
 
-    const otpEmail = socialFusionEmailTemplate(
-      "🔐 Email Verification",
-      user.fullName,
-      `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
-      "Verify Email"
-    );
-    await sendEmail(user.email, "Verify Your Email", otpEmail);
+    const transaction = await sequelize.transaction();
+    try {
+      // Bulk insert user and OTP
+      const users = await User.bulkCreate([{ 
+        fullName, username, phoneNumber, email, password, profilePic: profilePicUrl, isVerified: false 
+      }], { transaction });
 
-    await transaction.commit();
+      await OTP.bulkCreate([{ userId: users[0].id, otp }], { transaction });
 
-    res.status(201).json({ message: "User registered. OTP sent for verification.", data: user });
+      await transaction.commit();
+
+      // Send email in background
+      const otpEmail = socialFusionEmailTemplate(
+        "🔐 Email Verification",
+        users[0].fullName,
+        `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
+        "Verify Email"
+      );
+      sendEmailQueue(users[0].email, "Verify Your Email", otpEmail);
+
+      res.status(201).json({ message: "User registered. OTP sent for verification.", data: users[0] });
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error("❌ Registration Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
 
   } catch (error) {
     console.error("❌ Registration Error:", error);
-    await transaction.rollback();
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
