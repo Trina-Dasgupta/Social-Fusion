@@ -79,7 +79,7 @@ const VerifyOTP = () => {
       console.log("OTP Verification Successful", data);
       setIsValid(true);
       setIsVerified(true);
-      // setTimeout(() => router.push("/login"), 6000);
+      setTimeout(() => router.push("/login"), 50000);
     }
   }, [data]);
 
@@ -127,7 +127,7 @@ const VerifyOTP = () => {
             </p>
 
             <button
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200 disabled:bg-gray-400"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200 disabled:bg-gray-400" onClick={()=>router.push("/login")}
             >
               Go to Login
             </button>
