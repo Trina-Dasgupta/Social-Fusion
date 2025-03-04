@@ -22,6 +22,7 @@ export function useApi<T = unknown>(): { data: T | null; error: string | null; l
             });
 
             setData(response.data);
+            setError(null);
         } catch (err: any) {
             setError(err.error || err.message || "An error occurred");
         } finally {

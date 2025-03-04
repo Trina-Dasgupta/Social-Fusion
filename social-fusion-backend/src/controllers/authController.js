@@ -48,8 +48,8 @@ export const register = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
       // Bulk insert user and OTP
-      const users = await User.bulkCreate([{ 
-        fullName, username, phoneNumber, email, password, profilePic: profilePicUrl, isVerified: false 
+      const users = await User.bulkCreate([{
+        fullName, username, phoneNumber, email, password, profilePic: profilePicUrl, isVerified: false
       }], { transaction });
 
       await OTP.bulkCreate([{ userId: users[0].id, otp }], { transaction });
@@ -63,7 +63,7 @@ export const register = async (req, res) => {
         `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
         "Verify Email"
       );
-      sendEmailQueue(users[0].email, "Verify Your Email", otpEmail);
+      sendEmail(users[0].email, "Verify Your Email", otpEmail);
 
       res.status(201).json({ message: "User registered. OTP sent for verification.", data: users[0] });
 
@@ -75,6 +75,9 @@ export const register = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Registration Error:", error);
+    if (error.name === "SequelizeDatabaseError") {
+      return res.status(500).json({ error: "Database error. Please try again later." });
+    }
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -97,9 +100,17 @@ export const verifyOTP = async (req, res) => {
     res.json({ message: "Email verified successfully. You can now log in." });
   } catch (error) {
     console.error("❌ OTP Verification Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+
+    // ✅ Handle specific Sequelize errors
+    if (error.name === "SequelizeDatabaseError") {
+      return res.status(500).json({ error: "Database error. Please try again later." });
+    }
+
+    // ✅ Handle unexpected errors gracefully
+    return res.status(500).json({ error: "Something went wrong. Please try again later." });
   }
 };
+
 
 export const resendOTP = async (req, res) => {
   try {
@@ -132,6 +143,9 @@ export const resendOTP = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Resend OTP Error:", error);
+    if (error.name === "SequelizeDatabaseError") {
+      return res.status(500).json({ error: "Database error. Please try again later." });
+    }
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -182,7 +196,7 @@ export const login = async (req, res) => {
     if (!isPasswordMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-  
+
     // Generate JWT token
     const token = generateToken(user.id);
 
@@ -202,6 +216,9 @@ export const login = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Login Error:", error);
+    if (error.name === "SequelizeDatabaseError") {
+      return res.status(500).json({ error: "Database error. Please try again later." });
+    }
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

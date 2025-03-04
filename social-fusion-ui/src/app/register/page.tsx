@@ -8,10 +8,15 @@ import API_ROUTES from "@/constants/apiRoutes";
 import Link from "next/link";
 import Image from "next/image";
 import { useApi } from "@/hooks/useApi";
+import { useDispatch } from "react-redux";
+import { registerStart, registerSuccess } from "@/store/authSlice";
 
 const Register = () => {
   const router = useRouter();
-  const { data, error, loading, fetchData } = useApi<{ message: string }>();
+  const dispatch=useDispatch();
+  const { data, error, loading, fetchData } = useApi<{
+    data: any; message: string 
+}>();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -73,7 +78,7 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-
+    dispatch(registerStart());
     const formDataToSend = new FormData();
     Object.entries(formData).forEach(([key, value]) => formDataToSend.append(key, value));
     if (profilePic) formDataToSend.append("profilePic", profilePic);
@@ -81,7 +86,6 @@ const Register = () => {
     await fetchData(API_ROUTES.AUTH.REGISTER, "POST", formDataToSend, true);
   };
 
-  // ✅ Trigger toast and navigation only when new data arrives
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -90,6 +94,18 @@ const Register = () => {
 
   useEffect(() => {
     if (data) {
+      console.log(data)
+
+      dispatch(
+        registerSuccess({
+          fullName: data.data.fullName,
+          username: data.data.username,
+          email: data.data.email,
+          phoneNumber: data.data.phoneNumber,
+          profilePic: data.data.profilePic || "",
+        })
+      );
+
       toast.success("Registration successful! Redirecting...");
       setTimeout(() => {
         router.push("/verifyOtp");
