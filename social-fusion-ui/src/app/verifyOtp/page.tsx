@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Logo from "@/components/Logo";
+
 
 const VerifyOTP = () => {
   const router = useRouter();

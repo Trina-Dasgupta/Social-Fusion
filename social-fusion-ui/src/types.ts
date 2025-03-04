@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 export interface FormValues {
   email?: string;
   password?: string;
