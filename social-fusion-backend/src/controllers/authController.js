@@ -101,6 +101,40 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
+export const resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Check if user is already verified
+    if (user.isVerified) {
+      return res.status(400).json({ error: "User is already verified" });
+    }
+
+    await OTP.destroy({ where: { userId: user.id } });
+
+    // Generate a new OTP
+    const otp = generateOTP();
+    await OTP.create({ userId: user.id, otp });
+
+    const otpEmail = socialFusionEmailTemplate(
+      "🔐 Resend OTP - Email Verification",
+      user.fullName,
+      `Your new OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
+      "Verify Email"
+    );
+    await sendEmail(user.email, "Verify Your Email", otpEmail);
+
+    res.json({ message: "New OTP sent successfully." });
+
+  } catch (error) {
+    console.error("❌ Resend OTP Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 export const login = async (req, res) => {
   // Input validation

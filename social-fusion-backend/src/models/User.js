@@ -20,7 +20,6 @@ const User = sequelize.define(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: {
         len: { args: [3, 30], msg: "Username must be between 3 and 30 characters." },
         isAlphanumeric: { msg: "Username must contain only letters and numbers." },
@@ -29,7 +28,6 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: {
         isEmail: { msg: "Invalid email format." },
       },
@@ -37,7 +35,6 @@ const User = sequelize.define(
     phoneNumber: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: {
         is: {
           args: [/^\+?[1-9]\d{1,14}$/],
@@ -50,7 +47,7 @@ const User = sequelize.define(
       allowNull: false,
     },
     profilePic: {
-      type: DataTypes.STRING, // Store Cloudinary URL
+      type: DataTypes.STRING,
       allowNull: true,
       defaultValue: "https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/default-avatar.png",
     },
@@ -62,8 +59,8 @@ const User = sequelize.define(
   {
     tableName: "users",
     timestamps: true,
-    paranoid: true, // Soft delete users instead of hard delete
-    indexes: [{ unique: true, fields: ["email", "username", "phoneNumber"] }],
+    paranoid: true,
+    indexes: [{ unique: true, fields: ["email", "username", "phoneNumber"] }], 
     hooks: {
       beforeCreate: async (user) => {
         const salt = await bcrypt.genSalt(10);
@@ -72,5 +69,6 @@ const User = sequelize.define(
     },
   }
 );
+
 
 export default User;
