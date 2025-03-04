@@ -85,7 +85,9 @@ export const register = async (req, res) => {
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
-
+    if (!email || !otp) {
+      return res.status(400).json({ error: "Email and OTP are required." });
+    }
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
