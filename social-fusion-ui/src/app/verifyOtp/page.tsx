@@ -61,7 +61,7 @@ const VerifyOTP = () => {
     if (isResendDisabled) return;
 
     try {
-      alert("Resend OTP logic here - Call API to resend OTP"); // Replace with actual API call
+      alert("Resend OTP logic here - Call API to resend OTP");
       setIsResendDisabled(true);
       setTimer(30);
     } catch (error) {
