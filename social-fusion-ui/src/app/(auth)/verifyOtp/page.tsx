@@ -90,7 +90,7 @@ const VerifyOTP = () => {
     if (isResendDisabled) return;
 
     try {
-      await resendOtpApi("/auth/resend-otp", "POST", { email });
+      await resendOtpApi(API_ROUTES.AUTH.RESEND_OTP, "POST", { email });
 
       setIsResendDisabled(true);
       setTimer(30);
