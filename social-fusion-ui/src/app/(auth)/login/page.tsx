@@ -7,15 +7,17 @@ import Logo from "@/components/Logo";
 import useForm from "@/hooks/useForm";
 import { FormValues } from "@/utils/types";
 import { useApi } from "@/hooks/useApi";
-import { useState } from "react";
 import API_ROUTES from "@/constants/apiRoutes";
-import { setAuthCookie } from "@/utils/auth";
-
+import { useAuth } from "@/contexts/AuthContext";
+import Cookies from "js-cookie";
 
 const Login = () => {
   const router = useRouter();
-  const { data, error, loading, fetchData } = useApi();
+  const { data, error, loading, fetchData } = useApi<{
+    data: any; message: string
+  }>();
 
+  const { setUser } = useAuth();
   const validate = (values: FormValues) => {
     let errors: Record<string, string> = {};
 
@@ -37,15 +39,27 @@ const Login = () => {
     { email: "", password: "" },
     validate
   );
-
   const onSubmit = async (formValues: FormValues) => {
-    
-    const response :any= await fetchData(API_ROUTES.AUTH.LOGIN, "POST",{ identifier:formValues.email,password:formValues.password});
-    if (response && response.token) {
-      setAuthCookie(response.token);
-      router.push("/chat"); 
+    const response: any = await fetchData(API_ROUTES.AUTH.LOGIN, "POST", {
+      identifier: formValues.email,
+      password: formValues.password,
+    }, false);
+  
+    console.log(response, "response");
+  
+    if (response?.token) {
+      Cookies.set("authToken", response.token, {
+        expires: 7, 
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+      });
+
+      setUser(response.user);
+
+      router.push("/chat");
     }
   };
+  
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
