@@ -5,27 +5,21 @@ import { useState } from "react";
 
 type ValidationFunction = (values: FormValues) => Record<string, string>;
 
-const useForm = (initialState: FormValues, validate: ValidationFunction) => {
+const useForm = (initialState: FormValues, validate: (values: FormValues) => Record<string, string>) => {
   const [values, setValues] = useState<FormValues>(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValues({ ...values, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setValues({ ...values, [name]: value });
+
+    // Keep previous errors, but validate only the changed field
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: validate({ ...values, [name]: value })[name], // Revalidate only this field
+    }));
   };
 
-  // Handle file upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setValues({ ...values, profilePic: file });
-
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
-
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent, callback: (values: FormValues) => void) => {
     e.preventDefault();
     const validationErrors = validate(values);
@@ -36,7 +30,7 @@ const useForm = (initialState: FormValues, validate: ValidationFunction) => {
     }
   };
 
-  return { values, errors, previewImage, handleChange, handleFileChange, handleSubmit };
+  return { values, errors, handleChange, handleSubmit };
 };
 
 export default useForm;

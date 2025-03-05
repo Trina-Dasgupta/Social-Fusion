@@ -13,6 +13,8 @@ const VerifyOTP = () => {
   const { data, error, loading, fetchData } = useApi<{
     data: any; message: string
   }>();
+  const { data: resendData, error: resendError, loading: resendLoading, fetchData: resendOtpApi } = useApi();
+
   const user = useSelector((state: any) => state.auth);
   console.log(user, 'store')
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
@@ -88,7 +90,8 @@ const VerifyOTP = () => {
     if (isResendDisabled) return;
 
     try {
-      alert("Resend OTP logic here - Call API to resend OTP");
+      await resendOtpApi("/auth/resend-otp", "POST", { email });
+
       setIsResendDisabled(true);
       setTimer(30);
     } catch (error) {

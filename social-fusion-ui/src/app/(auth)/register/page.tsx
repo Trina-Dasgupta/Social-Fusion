@@ -15,8 +15,7 @@ const Register = () => {
   const router = useRouter();
   const dispatch=useDispatch();
   const { data, error, loading, fetchData } = useApi<{
-    data: any; message: string 
-}>();
+    data: any; message: string }>();
 
   const [formData, setFormData] = useState({
     fullName: "",
