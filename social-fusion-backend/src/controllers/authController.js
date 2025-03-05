@@ -39,7 +39,6 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "Email, Username, or Phone Number already taken." });
     }
 
-    // Parallelize expensive tasks
     const uploadProfilePic = req.file ? uploadToCloudinary(req.file.path) : Promise.resolve(null);
     const generateOTPAsync = generateOTP();
 
@@ -47,16 +46,15 @@ export const register = async (req, res) => {
 
     const transaction = await sequelize.transaction();
     try {
-      // Bulk insert user and OTP
       const users = await User.bulkCreate([{
         fullName, username, phoneNumber, email, password, profilePic: profilePicUrl, isVerified: false
-      }], { transaction });
+      }],  { transaction, individualHooks: true });
 
       await OTP.bulkCreate([{ userId: users[0].id, otp }], { transaction });
 
       await transaction.commit();
 
-      // Send email in background
+
       const otpEmail = socialFusionEmailTemplate(
         "🔐 Email Verification",
         users[0].fullName,

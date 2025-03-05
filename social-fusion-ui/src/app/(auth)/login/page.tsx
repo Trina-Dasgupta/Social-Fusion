@@ -6,36 +6,45 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import useForm from "@/hooks/useForm";
 import { FormValues } from "@/utils/types";
+import { useApi } from "@/hooks/useApi";
+import { useState } from "react";
+import API_ROUTES from "@/constants/apiRoutes";
+import { setAuthCookie } from "@/utils/auth";
 
 
 const Login = () => {
   const router = useRouter();
+  const { data, error, loading, fetchData } = useApi();
 
-const validate = (values: FormValues) => {
-  let errors: Record<string, string> = {};
+  const validate = (values: FormValues) => {
+    let errors: Record<string, string> = {};
 
-  if (!values.email) {
-    errors.email = "Email is required";
-  } else if (!/\S+@\S+\.\S+/.test(values.email)) {
-    errors.email = "Invalid email format";
-  }
+    if (!values.email) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(values.email)) {
+      errors.email = "Invalid email format";
+    }
 
-  if (!values.password) {
-    errors.password = "Password is required";
-  } else if (values.password.length < 6) {
-    errors.password = "Password must be at least 6 characters";
-  }
+    if (!values.password) {
+      errors.password = "Password is required";
+    } else if (values.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
 
-  return errors;
-};
+    return errors;
+  };
   const { values, errors, handleChange, handleSubmit } = useForm(
     { email: "", password: "" },
     validate
   );
 
-  const onSubmit = (formValues: FormValues) => {
-    console.log("Logged in with:", formValues);
-    router.push("/friends");
+  const onSubmit = async (formValues: FormValues) => {
+    
+    const response :any= await fetchData(API_ROUTES.AUTH.LOGIN, "POST",{ identifier:formValues.email,password:formValues.password});
+    if (response && response.token) {
+      setAuthCookie(response.token);
+      router.push("/chat"); 
+    }
   };
 
   return (
@@ -64,9 +73,8 @@ const validate = (values: FormValues) => {
             <input
               type="email"
               name="email"
-              className={`w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                }`}
               value={values.email}
               onChange={handleChange}
             />
@@ -81,9 +89,8 @@ const validate = (values: FormValues) => {
             <input
               type="password"
               name="password"
-              className={`w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.password ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? "border-red-500" : "border-gray-300"
+                }`}
               value={values.password}
               onChange={handleChange}
             />
