@@ -43,7 +43,7 @@ const Login = () => {
     const response: any = await fetchData(API_ROUTES.AUTH.LOGIN, "POST", {
       identifier: formValues.email,
       password: formValues.password,
-    }, false);
+    }, false,true);
   
     console.log(response, "response");
   
@@ -56,7 +56,6 @@ const Login = () => {
 
       setUser(response.user);
 
-      router.push("/chat");
     }
   };
   
@@ -122,8 +121,8 @@ const Login = () => {
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold p-2 rounded-md transition duration-200"
-          >
-            Log In
+          disabled={loading}>
+         {loading ? "Loading..." : "LogIn"}
           </button>
         </form>
 

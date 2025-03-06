@@ -7,19 +7,24 @@ import rateLimit from "express-rate-limit";
 import { config } from "dotenv";
 import authRoutes from "./routes/authRoutes.js"; // Fixed import
 import "../src/jobs/cronJobs.js";
+import cookieParser from "cookie-parser";
 config(); // Load environment variables
 
 const app = express();
 
 // Middleware setup
 app.use(
-    cors({
-      origin: "*", 
-      credentials: true, 
-    })
-  );
+  cors({
+    origin: (origin, callback) => {
+      callback(null, origin || "*"); 
+    },
+    credentials: true,
+  })
+);
+
 app.use(helmet());
 app.use(morgan("dev"));
+app.use(cookieParser());
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

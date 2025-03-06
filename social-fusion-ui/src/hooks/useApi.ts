@@ -19,7 +19,7 @@ export function useApi<T = unknown>(): {
         setData(null); 
         
         try {
-            const token = Cookies.get("authToken"); // Get token from cookies
+            const token = Cookies.get("authToken");
 
             const response = await api({
                 url: endpoint,
@@ -27,7 +27,7 @@ export function useApi<T = unknown>(): {
                 data: method !== "GET" ? payload : undefined,
                 headers: {
                     "Content-Type": isFormData ? "multipart/form-data" : "application/json",
-                    ...(token && { Authorization: `Bearer ${token}` }) // Send token in headers
+                    ...(token && { Authorization: `Bearer ${token}` }) 
                 },
                 withCredentials,
             });

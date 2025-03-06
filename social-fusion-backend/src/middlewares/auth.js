@@ -1,15 +1,24 @@
-import jwt from "jsonwebtoken";
 
-export const authenticate = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1];
+import { isBlacklisted } from "../utils/tokenBlacklist.js";
+import { verifyToken } from "../utils/verifyJwt.js";
 
-  if (!token) return res.status(401).json({ message: "Access denied" });
+
+export const authenticate = async (req, res, next) => {
+  const token = req.cookies.authToken;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (await isBlacklisted(token)) {
+    return res.status(403).json({ error: "Token has been revoked. Please log in again." });
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const decoded = verifyToken(token);
+    req.user = decoded; 
     next();
-  } catch (err) {
-    res.status(403).json({ message: "Invalid token" });
+  } catch (error) {
+    return res.status(401).json({ error: "Invalid token" });
   }
 };

@@ -4,9 +4,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Settings, User, LogOut, ShieldCheck, Bell, Palette } from "lucide-react";
 
 const SettingsMenu = () => {
-  const { logout } = useAuth();
-  return (
-    <div className="w-72 bg-white dark:bg-gray-800 rounded-lg shadow-md p-5">
+  const { user,logout } = useAuth();
+  return user && (
+   <div className="w-72 bg-white dark:bg-gray-800 rounded-lg shadow-md p-5">
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
         <Settings size={24} className="text-gray-700 dark:text-gray-300" />

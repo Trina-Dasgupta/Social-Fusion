@@ -13,7 +13,7 @@ const Header = () => {
   const [showSettings, setShowSettings] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null); // ✅ Reference for button
-
+console.log(user,'user')
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // ✅ If click is inside menu or on the button, do nothing

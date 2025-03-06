@@ -10,6 +10,8 @@ import { generateOTP } from "../utils/generateOtp.js";
 import { socialFusionEmailTemplate } from "../utils/emailTemplates.js";
 import { sendEmail } from "../services/emailService.js";
 import { sendEmailQueue } from "../utils/emailQueue.js";
+import { verifyToken } from "../utils/verifyJwt.js";
+import { addToBlacklist, isBlacklisted } from "../utils/tokenBlacklist.js";
 
 export const register = async (req, res) => {
   await Promise.all([
@@ -199,13 +201,13 @@ export const login = async (req, res) => {
 
     // Generate JWT token
     const token = generateToken(user.id);
-    // res.cookie("authToken", token, {
-    //   httpOnly: true, // Prevent JavaScript access
-    //   secure: process.env.NODE_ENV === "production",
-    //   // sameSite: "Strict", // Prevent CSRF attacks
-    //    sameSite: "Lax",
-    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    // });
+    res.cookie("authToken", token, {
+      httpOnly: true, // Prevent JavaScript access
+      secure: process.env.NODE_ENV === "production",
+      // sameSite: "Strict", // Prevent CSRF attacks
+       sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
     // Return success response
     res.status(200).json({
       message: "Login successful",
@@ -230,11 +232,66 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  // res.clearCookie("authToken", {
-  //   httpOnly: true,
-  //   secure: process.env.NODE_ENV === "production",
-  //   sameSite: "Strict",
-  // });
-  res.status(200).json({ message: "Logout successful" });
+  try {
+    if (!req.cookies) {
+      return res.status(400).json({ error: "Cookies are not enabled" });
+    }
+
+    const token = req.cookies.authToken;
+    if (!token) {
+      return res.status(400).json({ error: "No active session found" });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    addToBlacklist(token);
+
+    res.clearCookie("authToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+    });
+
+    return res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("❌ Logout Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+export const userInfo = async (req, res) => {
+  try {
+    const token = req.cookies.authToken;
+
+    if (!req.cookies || !req.cookies.authToken) {
+      return res.status(400).json({ error: "No active session found" });
+    }
+
+    if (await isBlacklisted(token)) {
+      return res.status(403).json({ error: "Token has been revoked. Please log in again." });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Fetch user from database
+    const user = await User.findOne({
+      where: { id: decoded.id }, // Fetch user by ID from token
+      attributes: { exclude: ["password"] }, // Exclude password from response
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("❌ User Info Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
