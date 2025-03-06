@@ -1,8 +1,10 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { Settings, User, LogOut, ShieldCheck, Bell, Palette } from "lucide-react";
 
 const SettingsMenu = () => {
+  const { logout } = useAuth();
   return (
     <div className="w-72 bg-white dark:bg-gray-800 rounded-lg shadow-md p-5">
       {/* Header */}
@@ -24,7 +26,7 @@ const SettingsMenu = () => {
         <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
 
         {/* Logout Button */}
-        <MenuItem icon={<LogOut size={18} />} label="Logout" danger />
+        <MenuItem icon={<LogOut size={18} />} label="Logout" danger logout={logout}/>
       </div>
     </div>
   );
@@ -35,10 +37,12 @@ const MenuItem = ({
   icon,
   label,
   danger = false,
+  logout
 }: {
   icon: React.ReactNode;
   label: string;
   danger?: boolean;
+  logout?: () => void;
 }) => {
   return (
     <button
@@ -46,7 +50,7 @@ const MenuItem = ({
         danger
           ? "text-red-500 hover:bg-red-100 dark:hover:bg-red-900"
           : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-      }`}
+      }`} onClick={logout}
     >
       {icon}
       <span className="text-sm font-medium">{label}</span>

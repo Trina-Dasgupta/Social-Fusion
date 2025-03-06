@@ -33,3 +33,20 @@ export interface User {
   email: string;
   profilePic: string;
 }
+
+
+export interface AuthContextType {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  logout: () => void;
+}
+export interface UserState {
+  fullName: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  profilePic?: string;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}

@@ -12,7 +12,12 @@ config(); // Load environment variables
 const app = express();
 
 // Middleware setup
-app.use(cors());
+app.use(
+    cors({
+      origin: "*", 
+      credentials: true, 
+    })
+  );
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(compression());

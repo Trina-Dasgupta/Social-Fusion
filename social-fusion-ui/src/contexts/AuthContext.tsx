@@ -2,23 +2,10 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { AuthContextType, User } from "@/utils/types";
 
-interface User {
-  id: string;
-  fullName: string;
-  username: string;
-  email: string;
-  phoneNumber?: string;
-  profilePic?: string;
-}
 
-interface AuthContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
-  logout: () => void;
-}
 
-// Provide a default empty context
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {

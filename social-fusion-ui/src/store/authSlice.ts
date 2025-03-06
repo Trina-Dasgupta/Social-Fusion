@@ -1,15 +1,6 @@
+import { UserState } from "@/utils/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface UserState {
-  fullName: string;
-  username: string;
-  email: string;
-  phoneNumber: string;
-  profilePic?: string;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
 
 const initialState: UserState = {
   fullName: "",

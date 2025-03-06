@@ -6,8 +6,10 @@ import { Settings } from "lucide-react";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import SettingsMenu from "./SettingsMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
+  const { user } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null); // ✅ Reference for button
@@ -47,14 +49,16 @@ const Header = () => {
 
       {/* Right: Settings Button */}
       <div className="flex items-center">
-        <button
-          ref={buttonRef} // ✅ Assign ref to button
-          onClick={() => setShowSettings((prev) => !prev)}
-          className="text-gray-600 dark:text-gray-300 hover:text-blue-500 transition"
-        >
-          <Settings size={24} />
-        </button>
-      </div>
+      {user && (
+      <button
+        ref={buttonRef}
+        onClick={() => setShowSettings((prev) => !prev)}
+        className="text-gray-600 dark:text-gray-300 hover:text-blue-500 transition"
+      >
+        <Settings size={24} />
+      </button>
+    )}
+      </div> 
 
       {/* Animated Settings Menu */}
       <AnimatePresence>
