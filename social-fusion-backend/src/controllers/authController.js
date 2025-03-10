@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 import OTP from "../models/Otp.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
 import sequelize from "../../config/database.js"
 import { body, validationResult } from "express-validator";
 import { Op } from "sequelize";
@@ -12,25 +12,17 @@ import { sendEmail } from "../services/emailService.js";
 import { sendEmailQueue } from "../utils/emailQueue.js";
 import { verifyToken } from "../utils/verifyJwt.js";
 import { addToBlacklist, isBlacklisted } from "../utils/tokenBlacklist.js";
+import { errorResponse, successResponse } from "../utils/response.js";
 
 export const register = async (req, res) => {
-  await Promise.all([
-    body("fullName").isLength({ min: 3 }).withMessage("Full Name must be at least 3 characters long").run(req),
-    body("username").isLength({ min: 3 }).withMessage("Username must be at least 3 characters long").run(req),
-    body("phoneNumber").matches(/^\+?[1-9]\d{1,14}$/).withMessage("Invalid phone number format").run(req),
-    body("email").isEmail().withMessage("Invalid email format").run(req),
-    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long").run(req),
-  ]);
-
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return errorResponse(res, 400, errors.array()[0].msg);
   }
 
-  try {
-    const { fullName, username, phoneNumber, email, password } = req.body;
+  const { fullName, username, phoneNumber, email, password } = req.body;
 
-    // Parallelized user existence check
+  try {
     const [existingEmail, existingUsername, existingPhone] = await Promise.all([
       User.findOne({ where: { email } }),
       User.findOne({ where: { username } }),
@@ -38,50 +30,64 @@ export const register = async (req, res) => {
     ]);
 
     if (existingEmail || existingUsername || existingPhone) {
-      return res.status(400).json({ error: "Email, Username, or Phone Number already taken." });
+      return errorResponse(res, 400, "Email, Username, or Phone Number already taken.");
     }
 
-    const uploadProfilePic = req.file ? uploadToCloudinary(req.file.path) : Promise.resolve(null);
-    const generateOTPAsync = generateOTP();
-
-    const [profilePicUrl, otp] = await Promise.all([uploadProfilePic, generateOTPAsync]);
-
     const transaction = await sequelize.transaction();
-    try {
-      const users = await User.bulkCreate([{
-        fullName, username, phoneNumber, email, password, profilePic: profilePicUrl, isVerified: false
-      }],  { transaction, individualHooks: true });
 
-      await OTP.bulkCreate([{ userId: users[0].id, otp }], { transaction });
+    try {
+
+      const [profilePicUrl, otp] = await Promise.all([
+        req.file ? uploadToCloudinary(req.file.path) : null,
+        generateOTP(),
+      ]);
+
+      const user = await User.create(
+        {
+          fullName,
+          username,
+          phoneNumber,
+          email,
+          password,
+          profilePic: profilePicUrl,
+          isVerified: false,
+        },
+        { transaction }
+      );
+
+
+      await OTP.create(
+        { userId: user.id, otp },
+        { transaction }
+      );
 
       await transaction.commit();
 
-
-      const otpEmail = socialFusionEmailTemplate(
-        "🔐 Email Verification",
-        users[0].fullName,
-        `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
-        "Verify Email"
+      await sendEmailQueue(
+        user.email,
+        "Verify Your Email",
+        socialFusionEmailTemplate(
+          "🔐 Email Verification",
+          user.fullName,
+          `Your OTP for email verification is: <h3>${otp}</h3>. It expires in 10 minutes.`,
+          "Verify Email"
+        )
       );
-      sendEmail(users[0].email, "Verify Your Email", otpEmail);
 
-      res.status(201).json({ message: "User registered. OTP sent for verification.", data: users[0] });
-
+      successResponse(res, "User registered. OTP sent for verification.", user);
     } catch (error) {
       await transaction.rollback();
-      console.error("❌ Registration Error:", error);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
 
+      if (req.file) {
+        await deleteFromCloudinary(req.file.path);
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("❌ Registration Error:", error);
-    if (error.name === "SequelizeDatabaseError") {
-      return res.status(500).json({ error: "Database error. Please try again later." });
-    }
-    res.status(500).json({ error: "Internal Server Error" });
+    errorResponse(res, 500, "Internal Server Error" + error.message );
   }
 };
-
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -103,12 +109,11 @@ export const verifyOTP = async (req, res) => {
   } catch (error) {
     console.error("❌ OTP Verification Error:", error);
 
-    // ✅ Handle specific Sequelize errors
     if (error.name === "SequelizeDatabaseError") {
       return res.status(500).json({ error: "Database error. Please try again later." });
     }
 
-    // ✅ Handle unexpected errors gracefully
+
     return res.status(500).json({ error: "Something went wrong. Please try again later." });
   }
 };
@@ -238,6 +243,7 @@ export const logout = (req, res) => {
     }
 
     const token = req.cookies.authToken;
+   
     if (!token) {
       return res.status(400).json({ error: "No active session found" });
     }
@@ -247,7 +253,9 @@ export const logout = (req, res) => {
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    addToBlacklist(token);
+    if (decoded && decoded.exp) {
+      addToBlacklist(token, decoded.exp);
+    }
 
     res.clearCookie("authToken", {
       httpOnly: true,

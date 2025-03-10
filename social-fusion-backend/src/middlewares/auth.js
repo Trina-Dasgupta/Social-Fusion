@@ -11,6 +11,8 @@ export const authenticate = async (req, res, next) => {
   }
 
   if (await isBlacklisted(token)) {
+    // if (isBlacklisted(token)) {
+
     return res.status(403).json({ error: "Token has been revoked. Please log in again." });
   }
 

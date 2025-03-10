@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
-import { Redis } from "ioredis";
+import createRedisClient from "../utils/redis";
 
-const redis = new Redis();
-const notificationQueue = new Queue("notifications", { connection: redis });
+const redisClient = createRedisClient();// Connect to Redis
+const notificationQueue = new Queue("notifications", { connection: redisClient });
 
 export default notificationQueue;
